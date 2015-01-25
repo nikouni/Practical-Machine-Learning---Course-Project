@@ -62,7 +62,7 @@ dim(training)</code></pre>
 <pre><code>## [1] 19622   160</code></pre>
 <pre class="r"><code>dim(testing)</code></pre>
 <pre><code>## [1]  20 160</code></pre>
-<p>We have then 159 initial features. After taking a quick view into the training and testing data (using <code>summary</code>), we can see that there are a lot of features that have all or almost all NA values.</p>
+<p>We have 159 initial features. After taking a quick view into the training and testing data (using <code>summary</code>), we can see that there are a lot of features that have all or almost all NA values.</p>
 <p>My plan is to remove this features, build a simple model and see if that is enough to score 20/20 on the submissions.</p>
 <p>What I am going to do is take the test set and remove all the features that have all NA values. There is no point in building a model that take into account a predictor that I will not have available in the test set. I will also remove the timestamp and X values, since they are strongly correlated to the classe value in the training set, but they might not be in the test set.</p>
 <p>For that purpose I will use the following function:</p>

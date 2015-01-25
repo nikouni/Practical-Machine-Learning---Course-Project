@@ -89,15 +89,10 @@ dim(training)</code></pre>
 <p>Here we can see that we have reduced the number of predictors from 159 to 55. Let’s see if that is good enough.</p>
 <p>I will try fitting a Random Forest model and see what happens. I will use OOB (Out Of Bag) error estimate, since in random forests, there is no need for cross validation or a separate test set to get an unbiased estimate of the test set error. It is estimated internally, during the run.</p>
 <pre class="r"><code>set.seed(1234)
-library(caret)</code></pre>
-<pre><code>## Loading required package: lattice
-## Loading required package: ggplot2</code></pre>
-<pre class="r"><code>myControl &lt;- trainControl(method = &quot;oob&quot;, number = 3)
-model &lt;- train(classe ~ . , method = &quot;rf&quot; , data = training, trControl = myControl)</code></pre>
-<pre><code>## Loading required package: randomForest
-## randomForest 4.6-10
-## Type rfNews() to see new features/changes/bug fixes.</code></pre>
-<pre class="r"><code>model</code></pre>
+library(caret)
+myControl &lt;- trainControl(method = &quot;oob&quot;, number = 3)
+model &lt;- train(classe ~ . , method = &quot;rf&quot; , data = training, trControl = myControl)
+model</code></pre>
 <pre><code>## Random Forest 
 ## 
 ## 19622 samples
@@ -115,11 +110,8 @@ model &lt;- train(classe ~ . , method = &quot;rf&quot; , data = training, trCont
 ## Accuracy was used to select the optimal model using  the largest value.
 ## The final value used for the model was mtry = 30.</code></pre>
 <p>We can see that the OOB estimate error is really good (0.9987 accuracy) so I think this is good enough for a first try.</p>
-<pre class="r"><code>predictions &lt;- predict(model,newdata = testing)</code></pre>
-<pre><code>## Loading required package: randomForest
-## randomForest 4.6-10
-## Type rfNews() to see new features/changes/bug fixes.</code></pre>
-<pre class="r"><code>predictions</code></pre>
+<pre class="r"><code>predictions &lt;- predict(model,newdata = testing)
+predictions</code></pre>
 <pre><code>##  [1] B A B A A E D B A A B C B A E E A B B B
 ## Levels: A B C D E</code></pre>
 <p>And I will use <code>pml_write_files</code> to generate the output files.</p>

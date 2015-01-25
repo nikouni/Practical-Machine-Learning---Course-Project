@@ -1,20 +1,83 @@
 ---
-title: "Mardown"
+title: "Practical Machine Learning Project"
 output: html_document
 ---
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cache=TRUE}
-summary(cars)
-```
-
-You can also embed plots, for example:
+Let's start by loading the training and testing data.
 
 ```{r}
-plot(cars)
+training <- read.csv("pml-training.csv")
+testing <- read.csv("pml-testing.csv")
+dim(training)
+dim(testing)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+We have 159 initial features. After taking a quick view into the training and testing data (using `summary`), we can see that there are a lot of features that have all or almost all NA values. 
+
+My plan is to remove this features, build a simple model and see if that is enough to score 20/20 on the submissions. 
+
+What I am going to do is take the test set and remove all the features that have all NA values. There is no point in building a model that take into account a predictor that I will not have available in the test set. I will also remove the timestamp and X values, since they are strongly correlated to the classe value in the training set, but they might not be in the test set.
+
+For that purpose I will use the following function:
+
+```{r}
+#This function removes the unwanted features
+valid_cols <- function(data) {  
+  num_cols <- ncol(data)
+  num_rows <- nrow(data)
+  res <- vector("numeric")
+  for (i in 1:(num_cols)) {
+    if (i <= 5 && i != 2 ) #remove col X and timestamps
+      next
+    if(sum(is.na(data[,i])) < num_rows )
+      res <- c(res,i)
+  }    
+  res
+}
+```
+
+And remove all the unwanted features from the test and training set.
+
+```{r}
+vcols <- valid_cols(testing)
+training <- training[,vcols]
+testing <- testing[,vcols]
+testing <- testing[,1:(ncol(testing)-1)] #Remove 'problem_id' column
+dim(training)
+```
+
+Here we can see that we have reduced the number of predictors from 159 to 55. Let's see if that is good enough.
+
+I will try fitting a Random Forest model and see what happens. I will use OOB (Out Of Bag) error estimate, since in random forests, there is no need for cross validation or a separate test set to get an unbiased estimate of the test set error. It is estimated internally, during the run.
+
+
+```{r cache=TRUE, message=FALSE}
+set.seed(1234)
+library(caret)
+myControl <- trainControl(method = "oob", number = 3)
+model <- train(classe ~ . , method = "rf" , data = training, trControl = myControl)
+model
+```
+
+We can see that the OOB estimate error is really good (0.9987 accuracy) so I think this is good enough for a first try. 
+
+```{r , message=FALSE}
+predictions <- predict(model,newdata = testing)
+predictions
+```
+
+And I will use `pml_write_files` to generate the output files.
+
+```{r}
+#This function generates the files with the answers to submit
+pml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("problem_id_",i,".txt")
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+pml_write_files(predictions)
+```
+
+I am then ready to submit the answers and... 20/20!! :-)
